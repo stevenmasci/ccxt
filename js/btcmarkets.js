@@ -496,6 +496,23 @@ module.exports = class btcmarkets extends Exchange {
         return await this.cancelOrders ([ id ]);
     }
 
+    async withdraw (symbol, amount, address, tag = undefined, params = {}) {
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const multiplier = 100000000;
+        const request = {
+            'amount': parseInt (amount * multiplier),
+            'address': `${address}${tag?'?dt='+tag:''}`,
+            'currency': market['baseId']
+        };
+        const response = await this.privatePostFundtransferWithdrawCrypto (this.extend (request, params));
+        const id = this.safeString (response, 'fundTransferId');
+        return {
+            "info": response,
+            "fundTransferId": id
+        }
+    }
+
     calculateFee (symbol, type, side, amount, price, takerOrMaker = 'taker', params = {}) {
         const market = this.markets[symbol];
         const rate = market[takerOrMaker];
