@@ -4,6 +4,7 @@
 
 const Exchange = require ('./base/Exchange');
 const { ExchangeError, OrderNotFound, ArgumentsRequired, InvalidOrder, DDoSProtection } = require ('./base/errors');
+const BigNumber = require('bignumber.js');
 
 //  ---------------------------------------------------------------------------
 
@@ -283,11 +284,11 @@ module.exports = class btcmarkets extends Exchange {
             const multiplier = 100000000;
             let total = this.safeFloat (balance, 'balance');
             if (total !== undefined) {
-                total /= multiplier;
+                total = BigNumber(total).dividedBy(multiplier).toNumber();
             }
             let used = this.safeFloat (balance, 'pendingFunds');
             if (used !== undefined) {
-                used /= multiplier;
+                used = BigNumber(used).dividedBy(multiplier).toNumber();
             }
             const account = this.account ();
             account['used'] = used;
@@ -317,7 +318,7 @@ module.exports = class btcmarkets extends Exchange {
             const key = keys[i];
             let value = this.safeFloat (ohlcv, key);
             if (value !== undefined) {
-                value = value / multiplier;
+                value = BigNumber(value).dividedBy(multiplier).toNumber();
             }
             result.push (value);
         }
@@ -467,8 +468,8 @@ module.exports = class btcmarkets extends Exchange {
         });
         request['currency'] = market['quote'];
         request['instrument'] = market['base'];
-        request['price'] = parseInt (price * multiplier);
-        request['volume'] = parseInt (amount * multiplier);
+        request['price'] = BigNumber(price).times(multiplier).toNumber();
+        request['volume'] = BigNumber(amount).times(multiplier).toNumber();
         request['orderSide'] = orderSide;
         request['ordertype'] = this.capitalize (type);
         request['clientRequestId'] = this.nonce ().toString ();
@@ -501,7 +502,7 @@ module.exports = class btcmarkets extends Exchange {
         const market = this.market (symbol);
         const multiplier = 100000000;
         const request = {
-            'amount': parseInt (amount * multiplier),
+            'amount': BigNumber(amount).times(multiplier).toNumber(),
             'address': `${address}${tag?'?dt='+tag:''}`,
             'currency': market['baseId']
         };
@@ -548,15 +549,15 @@ module.exports = class btcmarkets extends Exchange {
         const id = this.safeString (trade, 'id');
         let price = this.safeFloat (trade, 'price');
         if (price !== undefined) {
-            price /= multiplier;
+            price = BigNumber(price).dividedBy(multiplier).toNumber();
         }
         let amount = this.safeFloat (trade, 'volume');
         if (amount !== undefined) {
-            amount /= multiplier;
+            amount = BigNumber(amount).dividedBy(multiplier).toNumber();
         }
         let feeCost = this.safeFloat (trade, 'fee');
         if (feeCost !== undefined) {
-            feeCost /= multiplier;
+            feeCost = BigNumber(feeCost).dividedBy(multiplier).toNumber();
         }
         let cost = undefined;
         if (price !== undefined) {
