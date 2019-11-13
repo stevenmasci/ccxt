@@ -337,6 +337,25 @@ module.exports = class independentreserve extends Exchange {
         return this.parseTrades (response['Trades'], market, since, limit);
     }
 
+    async synchDigitalCurrency (depositAddress, symbol, params = {}) {
+        await this.loadMarkets ();
+        let request;
+        if(symbol) {
+            const market = this.market (symbol);
+            request = {
+                'primaryCurrencyCode': market['baseId'],
+                'depositAddress': depositAddress,
+            };
+        }
+        else {
+            request = {
+                'depositAddress': depositAddress,
+            };
+        }
+        const response = await this.privatePostSynchDigitalCurrencyDepositAddressWithBlockchain (this.extend (request, params));
+        return response;
+    }
+
     async createOrder (symbol, type, side, amount, price = undefined, params = {}) {
         await this.loadMarkets ();
         const market = this.market (symbol);
