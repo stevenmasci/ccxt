@@ -49,7 +49,7 @@ module.exports = class btcmarkets extends Exchange {
                 'private': {
                     'get': [
                         'account/balance',
-                        'account/{id}/tradingfee',
+                        'account/{instrument}/{currency}/tradingfee',
                         'fundtransfer/history',
                         'v2/order/open',
                         'v2/order/open/{id}',
@@ -99,6 +99,26 @@ module.exports = class btcmarkets extends Exchange {
                 },
             },
         });
+    }
+
+    async fetchTradingFee (symbol, params = {}) {
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const request = {
+            'instrument': market['quote'],
+            'currency': market['base']
+        };
+        const response = await this.privateGetAccountInstrumentCurrencyTradingfee (this.extend (request, params));
+        return this.parseTradingFee (market, response);
+    }
+
+    parseTradingFee (market, response) {
+        const multiplier = 100000000;
+        return {
+            'symbol': market['symbol'],
+            'currency': market['base'],
+            'fee': BigNumber (response.tradingFeeRate).dividedBy (multiplier).toNumber (),
+        };
     }
 
     async fetchTransactions (code = undefined, since = undefined, limit = undefined, params = {}) {

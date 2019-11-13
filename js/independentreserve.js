@@ -74,6 +74,22 @@ module.exports = class independentreserve extends Exchange {
         });
     }
 
+    async fetchTradingFee (symbol, params = {}) {
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const response = await this.privatePostGetBrokerageFees (params);
+        return this.parseTradingFee (market, response);
+    }
+
+    parseTradingFee (market, response) {
+        const feeEntry = response.find (fee => fee.CurrencyCode === market['baseId']);
+        return {
+            'symbol': market['symbol'],
+            'currency': market['base'],
+            'fee': feeEntry ? feeEntry.Fee : undefined,
+        };
+    }
+
     async fetchMarkets (params = {}) {
         const baseCurrencies = await this.publicGetGetValidPrimaryCurrencyCodes (params);
         const quoteCurrencies = await this.publicGetGetValidSecondaryCurrencyCodes (params);
